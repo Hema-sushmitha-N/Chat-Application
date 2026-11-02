@@ -8,11 +8,15 @@ const messageSchema = new mongoose.Schema(
     receiver: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
     room: { type: mongoose.Schema.Types.ObjectId, ref: 'Room' },
     text: { type: String, required: true, trim: true, maxlength: 2000 },
+    // One-to-one messages only: 'sent' (saved, receiver was offline) or 'delivered' (receiver's app has it)
+    status: { type: String, enum: ['sent', 'delivered'], default: 'sent' },
   },
   { timestamps: true }
 );
 
 messageSchema.index({ conversationId: 1, createdAt: 1 });
+// Finds the messages waiting for a user who was offline
+messageSchema.index({ receiver: 1, status: 1 });
 
 messageSchema.pre('validate', function requireTarget(next) {
   if (!this.receiver && !this.room) {
@@ -37,6 +41,7 @@ messageSchema.methods.toPublic = function toPublic() {
     conversationId: this.conversationId,
     sender: this.sender.toString(),
     text: this.text,
+    status: this.status,
     createdAt: this.createdAt,
   };
   if (this.receiver) message.receiver = this.receiver.toString();
