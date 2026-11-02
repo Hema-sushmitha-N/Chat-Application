@@ -1,7 +1,8 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useAuth } from '../context/AuthContext.jsx';
 import { api } from '../api.js';
 import { connectSocket } from '../socket.js';
+import usePresence from '../hooks/usePresence.js';
 import ConversationList from '../components/ConversationList.jsx';
 import RoomList from '../components/RoomList.jsx';
 import RoomInfo from '../components/RoomInfo.jsx';
@@ -17,6 +18,13 @@ export default function Chat() {
   const [messages, setMessages] = useState([]);
   const [connected, setConnected] = useState(false);
   const [error, setError] = useState('');
+  const online = usePresence();
+  const usersRef = useRef(users);
+  usersRef.current = users;
+
+  const loadUsers = useCallback(() => {
+    api.users().then((d) => setUsers(d.users)).catch((e) => setError(e.message));
+  }, []);
 
   const loadRooms = useCallback(() => {
     api.rooms().then((d) => setRooms(d.rooms)).catch((e) => setError(e.message));
@@ -24,9 +32,19 @@ export default function Chat() {
 
   // Conversation list and rooms
   useEffect(() => {
-    api.users().then((d) => setUsers(d.users)).catch((e) => setError(e.message));
+    loadUsers();
     loadRooms();
-  }, [loadRooms]);
+  }, [loadUsers, loadRooms]);
+
+  // Someone we have not seen before came online (a new account): refresh the user list
+  useEffect(() => {
+    const socket = connectSocket();
+    const onUpdate = ({ userId }) => {
+      if (userId !== user.id && !usersRef.current.some((u) => u.id === userId)) loadUsers();
+    };
+    socket.on('presence:update', onUpdate);
+    return () => socket.off('presence:update', onUpdate);
+  }, [user.id, loadUsers]);
 
   // Socket connection
   useEffect(() => {
@@ -147,6 +165,7 @@ export default function Chat() {
           users={users}
           activeId={active?.type === 'user' ? active.id : null}
           onSelect={selectUser}
+          onlineIds={online}
         />
         <RoomList
           rooms={rooms}
@@ -161,8 +180,17 @@ export default function Chat() {
         {active ? (
           <>
             <header className="chat-header">
-              <span>{active.type === 'room' ? `# ${active.name}` : active.name}</span>
-              {active.type === 'room' && <RoomInfo roomId={active.id} onLeave={leaveRoom} />}
+              <span>
+                {active.type === 'room' ? `# ${active.name}` : active.name}
+                {active.type === 'user' && (
+                  <span className={`presence ${online.has(active.id) ? 'online' : ''}`}>
+                    {online.has(active.id) ? 'Online' : 'Offline'}
+                  </span>
+                )}
+              </span>
+              {active.type === 'room' && (
+                <RoomInfo roomId={active.id} onLeave={leaveRoom} onlineIds={online} />
+              )}
             </header>
             {error && <div className="error">{error}</div>}
             <MessageList
