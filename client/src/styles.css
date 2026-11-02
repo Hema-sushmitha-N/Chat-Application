@@ -416,3 +416,12 @@ button.small {
 .presence.online {
   color: #027a48;
 }
+
+/* ---- Reconnection (Sprint 2) ---- */
+.banner {
+  background: #fff4e5;
+  color: #93370d;
+  border-bottom: 1px solid #fedf89;
+  padding: 8px 16px;
+  font-size: 14px;
+}
