@@ -5,3 +5,11 @@ export function mergeMessages(current, incoming) {
   incoming.forEach((m) => byId.set(m.id, m));
   return [...byId.values()].sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
 }
+
+// Which conversation a message belongs to, named the way the server names it:
+// 'room:<roomId>' for group messages, 'user:<otherUserId>' for one-to-one messages.
+export function messageKey(message, myId) {
+  if (message.room) return `room:${message.room}`;
+  const otherId = message.sender === myId ? message.receiver : message.sender;
+  return `user:${otherId}`;
+}

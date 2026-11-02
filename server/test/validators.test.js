@@ -6,6 +6,7 @@ import {
   validateMessage,
   validateRoom,
   isObjectId,
+  isConversationKey,
 } from '../src/utils/validators.js';
 
 test('register: accepts valid input', () => {
@@ -50,6 +51,17 @@ test('isObjectId: only accepts 24-character hex strings', () => {
   assert.equal(isObjectId('g'.repeat(24)), false);
   assert.equal(isObjectId({ $ne: null }), false);
   assert.equal(isObjectId(undefined), false);
+});
+
+test('isConversationKey: user:<id> or room:<id> only', () => {
+  const id = 'a'.repeat(24);
+  assert.equal(isConversationKey(`user:${id}`), true);
+  assert.equal(isConversationKey(`room:${id}`), true);
+  assert.equal(isConversationKey(`group:${id}`), false);
+  assert.equal(isConversationKey(`user:${id}x`), false);
+  assert.equal(isConversationKey(id), false);
+  assert.equal(isConversationKey({ $gt: '' }), false);
+  assert.equal(isConversationKey(undefined), false);
 });
 
 test('message: goes to a user or a room, not both and not neither', () => {

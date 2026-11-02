@@ -434,3 +434,52 @@ button.small {
   font-style: italic;
   color: var(--muted);
 }
+
+/* ---- Unread and notifications (Sprint 2) ---- */
+.conversation .grow {
+  flex: 1;
+}
+
+.badge {
+  background: #d92d20;
+  color: #fff;
+  border-radius: 999px;
+  min-width: 20px;
+  padding: 1px 6px;
+  font-size: 12px;
+  font-weight: 600;
+  text-align: center;
+}
+
+.notif-button {
+  margin: 4px 12px;
+  align-self: flex-start;
+}
+
+.toasts {
+  position: fixed;
+  right: 16px;
+  bottom: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  z-index: 10;
+}
+
+.toast {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  max-width: 320px;
+  text-align: left;
+  background: var(--text);
+  color: #fff;
+  padding: 10px 14px;
+  border-radius: 10px;
+  font-size: 14px;
+  box-shadow: 0 6px 24px rgba(28, 35, 51, 0.25);
+}
+
+.toast:hover:not(:disabled) {
+  background: #2d3650;
+}

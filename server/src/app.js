@@ -4,6 +4,7 @@ import helmet from 'helmet';
 import authRoutes from './routes/auth.js';
 import userRoutes from './routes/users.js';
 import roomRoutes from './routes/rooms.js';
+import unreadRoutes from './routes/unread.js';
 import messageRoutes from './routes/messages.js';
 import { notFound, errorHandler } from './middleware/errorHandler.js';
 
@@ -23,6 +24,7 @@ export function createApp() {
   app.use('/api/auth', authRoutes);
   app.use('/api/users', userRoutes);
   app.use('/api/rooms', roomRoutes);
+  app.use('/api/unread', unreadRoutes);
   app.use('/api/messages', messageRoutes);
 
   app.use(notFound);

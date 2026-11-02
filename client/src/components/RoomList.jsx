@@ -1,7 +1,8 @@
 import { useState } from 'react';
 
 // Sidebar section: rooms the user belongs to, a create form, and rooms they can join
-export default function RoomList({ rooms, activeId, onSelect, onCreate, onJoin }) {
+// unread: { 'room:<id>': count } (shows a badge)
+export default function RoomList({ rooms, activeId, onSelect, onCreate, onJoin, unread = {} }) {
   const [name, setName] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
@@ -43,17 +44,21 @@ export default function RoomList({ rooms, activeId, onSelect, onCreate, onJoin }
       {error && <div className="error small">{error}</div>}
 
       <ul className="conversation-list">
-        {joined.map((r) => (
-          <li key={r.id}>
-            <button
-              className={`conversation ${r.id === activeId ? 'active' : ''}`}
-              onClick={() => onSelect(r)}
-            >
-              <span className="avatar room">#</span>
-              <span>{r.name}</span>
-            </button>
-          </li>
-        ))}
+        {joined.map((r) => {
+          const count = unread[`room:${r.id}`] || 0;
+          return (
+            <li key={r.id}>
+              <button
+                className={`conversation ${r.id === activeId ? 'active' : ''}`}
+                onClick={() => onSelect(r)}
+              >
+                <span className="avatar room">#</span>
+                <span className="grow">{r.name}</span>
+                {count > 0 && <span className="badge">{count > 99 ? '99+' : count}</span>}
+              </button>
+            </li>
+          );
+        })}
       </ul>
       {joined.length === 0 && <p className="muted pad-sm">You have not joined any rooms yet.</p>}
 

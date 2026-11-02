@@ -1,4 +1,5 @@
 import Room from '../models/Room.js';
+import { markRead } from '../models/ReadState.js';
 import { isObjectId, validateRoom } from '../utils/validators.js';
 
 // Keep live sockets in step with membership, so room events reach the right people at once
@@ -36,6 +37,7 @@ export async function createRoom(req, res, next) {
     if (existing) return res.status(409).json({ message: 'A room with that name already exists' });
 
     const room = await Room.create({ name, createdBy: req.userId, members: [req.userId] });
+    await markRead(req.userId, `room:${room._id}`); // earlier messages are not "unread" for a new member
     syncSockets(req, req.userId, room._id, true);
     announce(req, room._id);
     return res.status(201).json({ room: room.toPublic(req.userId) });
@@ -74,6 +76,7 @@ export async function joinRoom(req, res, next) {
     );
     if (!room) return res.status(404).json({ message: 'Room not found' });
 
+    await markRead(req.userId, `room:${room._id}`); // earlier messages are not "unread" for a new member
     syncSockets(req, req.userId, room._id, true);
     announce(req, room._id);
     return res.json({ room: room.toPublic(req.userId) });
