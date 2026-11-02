@@ -14,6 +14,9 @@ const allowedOrigins = (process.env.CLIENT_ORIGIN || 'http://localhost:5173')
 export function initSocket(httpServer) {
   const io = new Server(httpServer, {
     cors: { origin: allowedOrigins },
+    // A client that drops for up to 2 minutes (Wi-Fi blip, laptop sleep) reconnects with the same
+    // session and is sent the events it missed. Longer gaps are handled by the client reloading history.
+    connectionStateRecovery: { maxDisconnectionDuration: 2 * 60 * 1000 },
   });
 
   // Only authenticated users may open a socket (token sent in the handshake)
