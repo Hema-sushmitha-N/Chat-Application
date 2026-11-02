@@ -2,7 +2,8 @@ import { Server } from 'socket.io';
 import User from '../models/User.js';
 import Room from '../models/Room.js';
 import Message, { buildConversationId, buildRoomConversationId } from '../models/Message.js';
-import { registerPresence } from './presence.js';
+import { presence, registerPresence } from './presence.js';
+import { flushPending } from './delivery.js';
 import { registerTyping } from './typing.js';
 import { verifyToken } from '../utils/token.js';
 import { validateMessage } from '../utils/validators.js';
@@ -73,6 +74,8 @@ export function initSocket(httpServer) {
           sender: socket.userId,
           receiver: to,
           text,
+          // Receiver online: delivered right now. Offline: stays 'sent' until they connect (delivery.js)
+          status: presence.isOnline(to) ? 'delivered' : 'sent',
         });
 
         const message = saved.toPublic();
@@ -92,6 +95,13 @@ export function initSocket(httpServer) {
       socket.join(rooms.map((r) => `room:${r._id}`));
     } catch (err) {
       console.error('Could not join rooms', err);
+    }
+
+    // Deliver what arrived while this user was offline
+    try {
+      await flushPending(socket);
+    } catch (err) {
+      console.error('Could not deliver pending messages', err);
     }
   });
 

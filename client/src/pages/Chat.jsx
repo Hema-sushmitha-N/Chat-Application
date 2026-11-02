@@ -181,6 +181,34 @@ export default function Chat() {
     return () => socket.off('message:new', onNew);
   }, [active, user.id, bump, clear, addToast]);
 
+  // Messages that arrived while we were offline are delivered in one batch on connect
+  useEffect(() => {
+    const socket = connectSocket();
+    const onOffline = ({ messages: missed }) => {
+      if (!missed || missed.length === 0) return;
+
+      const fromNames = [...new Set(missed.map((m) => namesRef.current[m.sender] || 'someone'))];
+      const who = fromNames.slice(0, 3).join(', ') + (fromNames.length > 3 ? ' and others' : '');
+      const text = `${missed.length} new message${missed.length === 1 ? '' : 's'} from ${who}`;
+      addToast('While you were away', text);
+      showDesktopNotification('While you were away', text);
+
+      reloadUnread(); // the badges come from the database, which already has these messages
+
+      // If the open conversation is one of them, show the messages straight away
+      const current = activeRef.current;
+      if (!current) return;
+      const key = `${current.type}:${current.id}`;
+      const relevant = missed.filter((m) => messageKey(m, user.id) === key);
+      if (relevant.length > 0) {
+        setMessages((prev) => mergeMessages(prev, relevant));
+        clear(key);
+      }
+    };
+    socket.on('offline:messages', onOffline);
+    return () => socket.off('offline:messages', onOffline);
+  }, [user.id, addToast, reloadUnread, clear]);
+
   // Open a conversation (a user or a room), mark it read and load its stored history
   const openConversation = useCallback(
     async (conversation) => {
