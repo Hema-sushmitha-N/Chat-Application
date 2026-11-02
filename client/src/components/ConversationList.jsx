@@ -1,4 +1,5 @@
-export default function ConversationList({ users, activeId, onSelect }) {
+// onlineIds: Set of user ids that are online (shows a green dot on the avatar)
+export default function ConversationList({ users, activeId, onSelect, onlineIds = new Set() }) {
   if (users.length === 0) {
     return <p className="muted pad">No other users yet. Register a second account to start chatting.</p>;
   }
@@ -11,7 +12,10 @@ export default function ConversationList({ users, activeId, onSelect }) {
             className={`conversation ${u.id === activeId ? 'active' : ''}`}
             onClick={() => onSelect(u)}
           >
-            <span className="avatar">{u.username[0].toUpperCase()}</span>
+            <span className="avatar">
+              {u.username[0].toUpperCase()}
+              {onlineIds.has(u.id) && <span className="dot" title="Online" />}
+            </span>
             <span>{u.username}</span>
           </button>
         </li>
