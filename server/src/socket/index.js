@@ -3,6 +3,7 @@ import User from '../models/User.js';
 import Room from '../models/Room.js';
 import Message, { buildConversationId, buildRoomConversationId } from '../models/Message.js';
 import { registerPresence } from './presence.js';
+import { registerTyping } from './typing.js';
 import { verifyToken } from '../utils/token.js';
 import { validateMessage } from '../utils/validators.js';
 
@@ -33,6 +34,7 @@ export function initSocket(httpServer) {
     // Each user has a personal room, so a message reaches every open tab/device
     socket.join(`user:${socket.userId}`);
     registerPresence(io, socket);
+    registerTyping(io, socket);
 
     // Client emits: socket.emit('message:send', { to, text }, ack)
     socket.on('message:send', async (payload, ack) => {
