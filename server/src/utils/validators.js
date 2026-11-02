@@ -5,6 +5,13 @@ const USERNAME_RE = /^[A-Za-z0-9_]+$/;
 const OBJECT_ID_RE = /^[a-f0-9]{24}$/i;
 const ROOM_NAME_RE = /^[A-Za-z0-9][A-Za-z0-9 _-]*$/;
 
+const CONVERSATION_KEY_RE = /^(user|room):[a-f0-9]{24}$/i;
+
+// 'user:<id>' (one-to-one chat) or 'room:<id>' (chat room): how the app names a conversation
+export function isConversationKey(value) {
+  return typeof value === 'string' && CONVERSATION_KEY_RE.test(value);
+}
+
 // True for a 24-character hex string (a MongoDB ObjectId)
 export function isObjectId(value) {
   return typeof value === 'string' && OBJECT_ID_RE.test(value);

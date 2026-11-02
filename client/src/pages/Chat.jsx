@@ -4,6 +4,7 @@ import { api } from '../api.js';
 import { connectSocket } from '../socket.js';
 import usePresence from '../hooks/usePresence.js';
 import useTyping from '../hooks/useTyping.js';
+import useUnread from '../hooks/useUnread.js';
 import ConversationList from '../components/ConversationList.jsx';
 import RoomList from '../components/RoomList.jsx';
 import RoomInfo from '../components/RoomInfo.jsx';
@@ -11,7 +12,13 @@ import MessageList from '../components/MessageList.jsx';
 import MessageInput from '../components/MessageInput.jsx';
 import ConnectionBanner from '../components/ConnectionBanner.jsx';
 import TypingIndicator from '../components/TypingIndicator.jsx';
-import { mergeMessages } from '../utils/messages.js';
+import Toasts from '../components/Toasts.jsx';
+import { mergeMessages, messageKey } from '../utils/messages.js';
+import {
+  notificationPermission,
+  requestNotificationPermission,
+  showDesktopNotification,
+} from '../utils/notify.js';
 
 const fetchHistory = (conversation) =>
   conversation.type === 'room' ? api.roomHistory(conversation.id) : api.history(conversation.id);
@@ -35,8 +42,14 @@ export default function Chat() {
   const [error, setError] = useState('');
   const online = usePresence();
   const typingIds = useTyping(active);
+  const { counts: unread, total: unreadTotal, bump, clear, reload: reloadUnread } = useUnread();
+  const [toasts, setToasts] = useState([]);
+  const [notifPermission, setNotifPermission] = useState(notificationPermission());
   const usersRef = useRef(users);
   usersRef.current = users;
+  const roomsRef = useRef(rooms);
+  roomsRef.current = rooms;
+  const namesRef = useRef({});
   const activeRef = useRef(active);
   activeRef.current = active;
   const logoutRef = useRef(logout);
@@ -66,10 +79,26 @@ export default function Chat() {
     return () => socket.off('presence:update', onUpdate);
   }, [user.id, loadUsers]);
 
+  const addToast = useCallback((title, text) => {
+    const id = `${Date.now()}-${Math.random()}`;
+    setToasts((prev) => [...prev.slice(-2), { id, title, text }]);
+    setTimeout(() => setToasts((prev) => prev.filter((t) => t.id !== id)), 5000);
+  }, []);
+
+  const dismissToast = useCallback((id) => {
+    setToasts((prev) => prev.filter((t) => t.id !== id));
+  }, []);
+
+  // The tab title shows how many unread messages are waiting
+  useEffect(() => {
+    document.title = unreadTotal > 0 ? `(${unreadTotal}) ChatSphere` : 'ChatSphere';
+  }, [unreadTotal]);
+
   // After a dropped connection: reload lists and fetch the messages missed while away
   const resync = useCallback(async () => {
     loadUsers();
     loadRooms();
+    reloadUnread();
     const current = activeRef.current;
     if (!current) return;
     try {
@@ -80,7 +109,7 @@ export default function Chat() {
     } catch {
       // Still offline or the token expired: the next reconnect tries again
     }
-  }, [loadUsers, loadRooms]);
+  }, [loadUsers, loadRooms, reloadUnread]);
 
   // Socket connection state
   useEffect(() => {
@@ -125,34 +154,49 @@ export default function Chat() {
     return () => socket.off('room:updated', loadRooms);
   }, [loadRooms]);
 
-  // Append new messages that belong to the open conversation
+  // A new message: show it if its conversation is open, otherwise count it and notify
   useEffect(() => {
     const socket = connectSocket();
     const onNew = (msg) => {
-      if (!active) return;
-      const belongs =
-        active.type === 'room'
-          ? msg.room === active.id
-          : !msg.room && (msg.sender === active.id || msg.receiver === active.id);
-      if (!belongs) return;
-      setMessages((prev) => (prev.some((m) => m.id === msg.id) ? prev : [...prev, msg]));
+      const key = messageKey(msg, user.id);
+      const isOpen = active && key === `${active.type}:${active.id}`;
+
+      if (isOpen) {
+        setMessages((prev) => (prev.some((m) => m.id === msg.id) ? prev : [...prev, msg]));
+        if (msg.sender !== user.id) clear(key); // the user is looking at it, so it counts as read
+        return;
+      }
+      if (msg.sender === user.id) return; // our own message, sent from another tab
+
+      bump(key);
+      const sender = namesRef.current[msg.sender] || 'Someone';
+      const room = msg.room ? roomsRef.current.find((r) => r.id === msg.room) : null;
+      const title = room ? `# ${room.name}` : sender;
+      const preview = msg.text.length > 80 ? `${msg.text.slice(0, 80)}...` : msg.text;
+      const text = room ? `${sender}: ${preview}` : preview;
+      addToast(title, text);
+      showDesktopNotification(title, text);
     };
     socket.on('message:new', onNew);
     return () => socket.off('message:new', onNew);
-  }, [active]);
+  }, [active, user.id, bump, clear, addToast]);
 
-  // Open a conversation (a user or a room) and load its stored history
-  const openConversation = useCallback(async (conversation) => {
-    setActive(conversation);
-    setMessages([]);
-    setError('');
-    try {
-      const data = await fetchHistory(conversation);
-      setMessages(data.messages);
-    } catch (e) {
-      setError(e.message);
-    }
-  }, []);
+  // Open a conversation (a user or a room), mark it read and load its stored history
+  const openConversation = useCallback(
+    async (conversation) => {
+      setActive(conversation);
+      setMessages([]);
+      setError('');
+      clear(`${conversation.type}:${conversation.id}`);
+      try {
+        const data = await fetchHistory(conversation);
+        setMessages(data.messages);
+      } catch (e) {
+        setError(e.message);
+      }
+    },
+    [clear]
+  );
 
   const selectUser = (u) => openConversation({ type: 'user', id: u.id, name: u.username });
   const selectRoom = (r) => openConversation({ type: 'room', id: r.id, name: r.name });
@@ -188,6 +232,11 @@ export default function Chat() {
   users.forEach((u) => {
     names[u.id] = u.username;
   });
+  namesRef.current = names;
+
+  async function enableNotifications() {
+    setNotifPermission(await requestNotificationPermission());
+  }
 
   // Tell the other side we started / stopped typing. volatile: dropped if offline, never queued.
   function sendTyping(isTyping) {
@@ -225,11 +274,17 @@ export default function Chat() {
             Log out
           </button>
         </div>
+        {notifPermission === 'default' && (
+          <button className="link small notif-button" onClick={enableNotifications}>
+            Enable desktop notifications
+          </button>
+        )}
         <ConversationList
           users={users}
           activeId={active?.type === 'user' ? active.id : null}
           onSelect={selectUser}
           onlineIds={online}
+          unread={unread}
         />
         <RoomList
           rooms={rooms}
@@ -237,6 +292,7 @@ export default function Chat() {
           onSelect={selectRoom}
           onCreate={createRoom}
           onJoin={joinRoom}
+          unread={unread}
         />
       </aside>
 
@@ -276,6 +332,7 @@ export default function Chat() {
           <div className="center-screen muted">Select a user or a room to start chatting</div>
         )}
       </main>
+      <Toasts toasts={toasts} onDismiss={dismissToast} />
     </div>
   );
 }
