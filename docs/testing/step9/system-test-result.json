@@ -1,0 +1,49 @@
+{
+  "passed": true,
+  "checks": [
+    {
+      "name": "MongoDB connection pool is configured for 20 connections",
+      "passed": true
+    },
+    {
+      "name": "Real MongoDB aggregation counts unread private/room messages and excludes read, own and non-member messages",
+      "passed": true
+    },
+    {
+      "name": "Marking a conversation read removes its unread count",
+      "passed": true
+    },
+    {
+      "name": "Health endpoint reports distinct connected users",
+      "passed": true
+    },
+    {
+      "name": "Typing flood is capped at 40 events per 10 seconds",
+      "passed": true
+    },
+    {
+      "name": "The 21st message is rate-limited before being saved",
+      "passed": true
+    },
+    {
+      "name": "Message limits are shared across tabs and health counts each user once",
+      "passed": true
+    },
+    {
+      "name": "Oversized Socket.IO packets are disconnected",
+      "passed": true
+    },
+    {
+      "name": "API rate limits return 429 and Retry-After while health stays available",
+      "passed": true
+    },
+    {
+      "name": "Authentication requests use a separate stricter rate limit",
+      "passed": true
+    },
+    {
+      "name": "50-user load test meets delivery, concurrency and history targets",
+      "passed": true
+    }
+  ]
+}

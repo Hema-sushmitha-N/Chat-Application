@@ -1,0 +1,14 @@
+{
+  "users": 50,
+  "messagesPerUser": 5,
+  "connected": 50,
+  "acknowledged": 250,
+  "failed": 0,
+  "received": 12500,
+  "expected": 12500,
+  "onlineUsers": 50,
+  "p95DeliveryMs": 98,
+  "maxDeliveryMs": 113,
+  "maxHistoryMs": 199,
+  "passed": true
+}

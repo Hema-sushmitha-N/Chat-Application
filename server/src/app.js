@@ -7,6 +7,8 @@ import roomRoutes from './routes/rooms.js';
 import unreadRoutes from './routes/unread.js';
 import messageRoutes from './routes/messages.js';
 import { notFound, errorHandler } from './middleware/errorHandler.js';
+import { rateLimit } from './middleware/rateLimit.js';
+import { presence } from './socket/presence.js';
 
 // CLIENT_ORIGIN may hold several origins separated by commas
 const allowedOrigins = (process.env.CLIENT_ORIGIN || 'http://localhost:5173')
@@ -20,7 +22,21 @@ export function createApp() {
   app.use(cors({ origin: allowedOrigins }));
   app.use(express.json({ limit: '10kb' }));
 
-  app.get('/api/health', (req, res) => res.json({ status: 'ok' }));
+  // Health check, also handy to see how many users are connected during a load test
+  app.get('/api/health', (req, res) =>
+    res.json({ status: 'ok', uptimeSeconds: Math.round(process.uptime()), onlineUsers: presence.count() })
+  );
+
+  // Rate limits per IP address. Login and register get a much stricter limit (password guessing).
+  app.use('/api', rateLimit({ limit: Number(process.env.RATE_LIMIT_API) || 600, windowMs: 60 * 1000 }));
+  app.use(
+    '/api/auth',
+    rateLimit({
+      limit: Number(process.env.RATE_LIMIT_AUTH) || 50,
+      windowMs: 15 * 60 * 1000,
+      message: 'Too many login attempts, try again in a few minutes',
+    })
+  );
   app.use('/api/auth', authRoutes);
   app.use('/api/users', userRoutes);
   app.use('/api/rooms', roomRoutes);

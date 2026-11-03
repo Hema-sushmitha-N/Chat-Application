@@ -1,0 +1,386 @@
+TAP version 13
+# Subtest: token: sign and verify round trip
+ok 1 - token: sign and verify round trip
+  ---
+  duration_ms: 6.6525
+  type: 'test'
+  ...
+# Subtest: token: tampered token is rejected
+ok 2 - token: tampered token is rejected
+  ---
+  duration_ms: 1.7329
+  type: 'test'
+  ...
+# Subtest: requireAuth: rejects request without token
+ok 3 - requireAuth: rejects request without token
+  ---
+  duration_ms: 0.2507
+  type: 'test'
+  ...
+# Subtest: requireAuth: rejects invalid token
+ok 4 - requireAuth: rejects invalid token
+  ---
+  duration_ms: 0.1376
+  type: 'test'
+  ...
+# Subtest: requireAuth: accepts valid token and sets userId
+ok 5 - requireAuth: accepts valid token and sets userId
+  ---
+  duration_ms: 1.2889
+  type: 'test'
+  ...
+# Subtest: conversation id is the same for both participants
+ok 6 - conversation id is the same for both participants
+  ---
+  duration_ms: 1.0086
+  type: 'test'
+  ...
+# Subtest: conversation id differs for different pairs
+ok 7 - conversation id differs for different pairs
+  ---
+  duration_ms: 0.1809
+  type: 'test'
+  ...
+# Subtest: room conversation id is stable and cannot clash with a one-to-one id
+ok 8 - room conversation id is stable and cannot clash with a one-to-one id
+  ---
+  duration_ms: 0.1107
+  type: 'test'
+  ...
+# Subtest: login: correct credentials issue a JWT and return only public fields
+ok 9 - login: correct credentials issue a JWT and return only public fields
+  ---
+  duration_ms: 281.4052
+  type: 'test'
+  ...
+# Subtest: login: unknown email and wrong password return the same 401
+ok 10 - login: unknown email and wrong password return the same 401
+  ---
+  duration_ms: 110.1847
+  type: 'test'
+  ...
+# SyntaxError: Unexpected token 'n', "null" is not valid JSON
+#     at JSON.parse (<anonymous>)
+#     at createStrictSyntaxError (C:\\Chat-Application-sprint2-step9\\server\\node_modules\\body-parser\\lib\\types\\json.js:169:10)
+#     at parse (C:\\Chat-Application-sprint2-step9\\server\\node_modules\\body-parser\\lib\\types\\json.js:90:15)
+#     at C:\\Chat-Application-sprint2-step9\\server\\node_modules\\body-parser\\lib\\read.js:146:18
+#     at AsyncResource.runInAsyncScope (node:async_hooks:214:14)
+#     at invokeCallback (C:\\Chat-Application-sprint2-step9\\server\\node_modules\\raw-body\\index.js:238:16)
+#     at done (C:\\Chat-Application-sprint2-step9\\server\\node_modules\\raw-body\\index.js:227:7)
+#     at IncomingMessage.onEnd (C:\\Chat-Application-sprint2-step9\\server\\node_modules\\raw-body\\index.js:287:7)
+#     at IncomingMessage.emit (node:events:519:28)
+#     at endReadableNT (node:internal/streams/readable:1698:12) {
+#   expose: true,
+#   statusCode: 400,
+#   status: 400,
+#   body: 'null',
+#   type: 'entity.parse.failed'
+# }
+# Subtest: login: missing, malformed and injection credentials never reach the database
+ok 11 - login: missing, malformed and injection credentials never reach the database
+  ---
+  duration_ms: 15.0167
+  type: 'test'
+  ...
+# Subtest: me: a valid JWT restores the same public user
+ok 12 - me: a valid JWT restores the same public user
+  ---
+  duration_ms: 5.9666
+  type: 'test'
+  ...
+# Subtest: me: missing, invalid, tampered, and expired tokens are rejected before lookup
+ok 13 - me: missing, invalid, tampered, and expired tokens are rejected before lookup
+  ---
+  duration_ms: 10.3543
+  type: 'test'
+  ...
+# Subtest: me: a deleted user cannot restore a session
+ok 14 - me: a deleted user cannot restore a session
+  ---
+  duration_ms: 3.9766
+  type: 'test'
+  ...
+# Subtest: registration still hashes passwords and returns the existing response contract
+ok 15 - registration still hashes passwords and returns the existing response contract
+  ---
+  duration_ms: 193.8262
+  type: 'test'
+  ...
+# Subtest: first socket brings a user online, later sockets do not
+ok 16 - first socket brings a user online, later sockets do not
+  ---
+  duration_ms: 2.1126
+  type: 'test'
+  ...
+# Subtest: user goes offline only when the last socket disconnects
+ok 17 - user goes offline only when the last socket disconnects
+  ---
+  duration_ms: 0.326
+  type: 'test'
+  ...
+# Subtest: removing an unknown socket or user changes nothing
+ok 18 - removing an unknown socket or user changes nothing
+  ---
+  duration_ms: 0.1771
+  type: 'test'
+  ...
+# Subtest: onlineIds and count list each online user once
+ok 19 - onlineIds and count list each online user once
+  ---
+  duration_ms: 1.5628
+  type: 'test'
+  ...
+# Subtest: a user can come online again after going offline
+ok 20 - a user can come online again after going offline
+  ---
+  duration_ms: 0.1862
+  type: 'test'
+  ...
+# Subtest: ids are compared as strings
+ok 21 - ids are compared as strings
+  ---
+  duration_ms: 0.1685
+  type: 'test'
+  ...
+# Subtest: allows hits up to the limit, then blocks
+ok 22 - allows hits up to the limit, then blocks
+  ---
+  duration_ms: 1.7093
+  type: 'test'
+  ...
+# Subtest: keys are counted separately
+ok 23 - keys are counted separately
+  ---
+  duration_ms: 0.234
+  type: 'test'
+  ...
+# Subtest: a new window starts after windowMs
+ok 24 - a new window starts after windowMs
+  ---
+  duration_ms: 0.1949
+  type: 'test'
+  ...
+# Subtest: retryAfterMs counts down inside a window
+ok 25 - retryAfterMs counts down inside a window
+  ---
+  duration_ms: 0.1438
+  type: 'test'
+  ...
+# Subtest: prune removes only finished windows
+ok 26 - prune removes only finished windows
+  ---
+  duration_ms: 0.2498
+  type: 'test'
+  ...
+# Subtest: status order is sent, delivered, read
+ok 27 - status order is sent, delivered, read
+  ---
+  duration_ms: 1.5969
+  type: 'test'
+  ...
+# Subtest: a status can only move forward
+ok 28 - a status can only move forward
+  ---
+  duration_ms: 0.2449
+  type: 'test'
+  ...
+# Subtest: unknown statuses never advance
+ok 29 - unknown statuses never advance
+  ---
+  duration_ms: 0.1671
+  type: 'test'
+  ...
+# Subtest: groupIdsBySender collects message ids per sender as strings
+ok 30 - groupIdsBySender collects message ids per sender as strings
+  ---
+  duration_ms: 1.4687
+  type: 'test'
+  ...
+# Subtest: one-to-one typing is sent to the other user only
+ok 31 - one-to-one typing is sent to the other user only
+  ---
+  duration_ms: 3.1754
+  type: 'test'
+  ...
+# Subtest: stopped typing is passed on too
+ok 32 - stopped typing is passed on too
+  ---
+  duration_ms: 0.4337
+  type: 'test'
+  ...
+# Subtest: room typing reaches the room and names the room
+ok 33 - room typing reaches the room and names the room
+  ---
+  duration_ms: 0.2806
+  type: 'test'
+  ...
+# Subtest: typing into a room you have not joined is ignored
+ok 34 - typing into a room you have not joined is ignored
+  ---
+  duration_ms: 0.1975
+  type: 'test'
+  ...
+# Subtest: malformed payloads are ignored
+ok 35 - malformed payloads are ignored
+  ---
+  duration_ms: 0.2183
+  type: 'test'
+  ...
+# Subtest: the sender id comes from the socket, not from the payload
+ok 36 - the sender id comes from the socket, not from the payload
+  ---
+  duration_ms: 0.1897
+  type: 'test'
+  ...
+# Subtest: a flood of typing events is cut off
+ok 37 - a flood of typing events is cut off
+  ---
+  duration_ms: 0.3814
+  type: 'test'
+  ...
+# Subtest: nothing to count gives null
+ok 38 - nothing to count gives null
+  ---
+  duration_ms: 1.7543
+  type: 'test'
+  ...
+# Subtest: one-to-one branch only counts messages after the last read time
+ok 39 - one-to-one branch only counts messages after the last read time
+  ---
+  duration_ms: 1.6913
+  type: 'test'
+  ...
+# Subtest: room branch excludes my own messages
+ok 40 - room branch excludes my own messages
+  ---
+  duration_ms: 0.3361
+  type: 'test'
+  ...
+# Subtest: toCounts names rooms and people the way the client does
+ok 41 - toCounts names rooms and people the way the client does
+  ---
+  duration_ms: 0.2874
+  type: 'test'
+  ...
+# Subtest: unread aggregation uses ObjectIds and one count query for private chats and rooms
+ok 42 - unread aggregation uses ObjectIds and one count query for private chats and rooms
+  ---
+  duration_ms: 4.288
+  type: 'test'
+  ...
+# Subtest: unread endpoint skips aggregation when there are no conversations
+ok 43 - unread endpoint skips aggregation when there are no conversations
+  ---
+  duration_ms: 0.5647
+  type: 'test'
+  ...
+# Subtest: register: accepts valid input
+ok 44 - register: accepts valid input
+  ---
+  duration_ms: 2.949
+  type: 'test'
+  ...
+# Subtest: register: rejects short username, bad email and short password
+ok 45 - register: rejects short username, bad email and short password
+  ---
+  duration_ms: 0.3958
+  type: 'test'
+  ...
+# Subtest: register: rejects username with special characters
+ok 46 - register: rejects username with special characters
+  ---
+  duration_ms: 0.242
+  type: 'test'
+  ...
+# Subtest: register: handles missing body
+ok 47 - register: handles missing body
+  ---
+  duration_ms: 0.3118
+  type: 'test'
+  ...
+# Subtest: login: requires email and password
+ok 48 - login: requires email and password
+  ---
+  duration_ms: 0.2637
+  type: 'test'
+  ...
+# Subtest: room: accepts normal names and rejects bad ones
+ok 49 - room: accepts normal names and rejects bad ones
+  ---
+  duration_ms: 0.3995
+  type: 'test'
+  ...
+# Subtest: isObjectId: only accepts 24-character hex strings
+ok 50 - isObjectId: only accepts 24-character hex strings
+  ---
+  duration_ms: 0.3072
+  type: 'test'
+  ...
+# Subtest: isConversationKey: user:<id> or room:<id> only
+ok 51 - isConversationKey: user:<id> or room:<id> only
+  ---
+  duration_ms: 0.335
+  type: 'test'
+  ...
+# Subtest: message: goes to a user or a room, not both and not neither
+ok 52 - message: goes to a user or a room, not both and not neither
+  ---
+  duration_ms: 0.388
+  type: 'test'
+  ...
+# Subtest: message: validates receiver id and text
+ok 53 - message: validates receiver id and text
+  ---
+  duration_ms: 0.402
+  type: 'test'
+  ...
+1..53
+# tests 53
+# suites 0
+# pass 53
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 1763.2534
+# start of coverage report
+# -------------------------------------------------------------------------------------------------
+# file                   | line % | branch % | funcs % | uncovered lines
+# -------------------------------------------------------------------------------------------------
+# src                    |        |          |         | 
+#  app.js                |  98.00 |   100.00 |   66.67 | 27
+#  controllers           |        |          |         | 
+#   authController.js    |  83.93 |    66.67 |  100.00 | 16-18 25-26 43-44 54-55
+#   messageController.js |  27.45 |   100.00 |    0.00 | 7-18 23-34 39-51
+#   roomController.js    |  20.75 |   100.00 |    0.00 | 6-12 15-17 21-27 31-49 53-65 69-86 90-106
+#   unreadController.js  |  76.92 |    83.33 |   75.00 | 37-38 43-52
+#   userController.js    |  36.36 |   100.00 |    0.00 | 5-11
+#  middleware            |        |          |         | 
+#   auth.js              | 100.00 |   100.00 |  100.00 | 
+#   errorHandler.js      |  77.78 |    50.00 |   50.00 | 2-3
+#   rateLimit.js         |  83.33 |    75.00 |   66.67 | 13-15
+#  models                |        |          |         | 
+#   Message.js           |  71.15 |   100.00 |   50.00 | 22-25 39-49
+#   ReadState.js         |  75.00 |   100.00 |    0.00 | 20-26
+#   Room.js              |  65.71 |   100.00 |    0.00 | 21-32
+#   User.js              | 100.00 |   100.00 |  100.00 | 
+#  routes                |        |          |         | 
+#   auth.js              | 100.00 |   100.00 |  100.00 | 
+#   messages.js          | 100.00 |   100.00 |  100.00 | 
+#   rooms.js             | 100.00 |   100.00 |  100.00 | 
+#   unread.js            | 100.00 |   100.00 |  100.00 | 
+#   users.js             | 100.00 |   100.00 |  100.00 | 
+#  socket                |        |          |         | 
+#   presence.js          |  33.33 |   100.00 |    0.00 | 10-27
+#   typing.js            | 100.00 |   100.00 |  100.00 | 
+#  utils                 |        |          |         | 
+#   presence.js          | 100.00 |   100.00 |  100.00 | 
+#   rateLimiter.js       | 100.00 |   100.00 |  100.00 | 
+#   status.js            | 100.00 |   100.00 |  100.00 | 
+#   token.js             | 100.00 |    80.00 |  100.00 | 
+#   unread.js            | 100.00 |   100.00 |  100.00 | 
+#   validators.js        | 100.00 |   100.00 |  100.00 | 
+# -------------------------------------------------------------------------------------------------
+# all files              |  75.82 |    94.08 |   68.18 | 
+# -------------------------------------------------------------------------------------------------
+# end of coverage report

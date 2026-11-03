@@ -7,15 +7,21 @@ import { flushPending, registerDelivery } from './delivery.js';
 import { registerTyping } from './typing.js';
 import { verifyToken } from '../utils/token.js';
 import { validateMessage } from '../utils/validators.js';
+import { createRateLimiter } from '../utils/rateLimiter.js';
 
 // CLIENT_ORIGIN may hold several origins separated by commas
 const allowedOrigins = (process.env.CLIENT_ORIGIN || 'http://localhost:5173')
   .split(',')
   .map((s) => s.trim());
 
+// Per user (all tabs together): at most 20 messages every 10 seconds
+const messageLimiter = createRateLimiter({ limit: 20, windowMs: 10 * 1000 });
+
 export function initSocket(httpServer) {
   const io = new Server(httpServer, {
     cors: { origin: allowedOrigins },
+    // Messages are at most 2000 characters, so a 16 KB packet is plenty. Bigger ones are refused.
+    maxHttpBufferSize: 16 * 1024,
     // A client that drops for up to 2 minutes (Wi-Fi blip, laptop sleep) reconnects with the same
     // session and is sent the events it missed. Longer gaps are handled by the client reloading history.
     connectionStateRecovery: { maxDisconnectionDuration: 2 * 60 * 1000 },
@@ -31,6 +37,9 @@ export function initSocket(httpServer) {
     }
   });
 
+  // Remove finished rate-limit windows now and then
+  setInterval(() => messageLimiter.prune(), 60 * 1000).unref();
+
   io.on('connection', async (socket) => {
     // Each user has a personal room, so a message reaches every open tab/device
     socket.join(`user:${socket.userId}`);
@@ -42,6 +51,10 @@ export function initSocket(httpServer) {
     socket.on('message:send', async (payload, ack) => {
       const reply = typeof ack === 'function' ? ack : () => {};
       try {
+        if (!messageLimiter.hit(socket.userId).allowed) {
+          return reply({ ok: false, error: 'You are sending messages too fast. Wait a few seconds.' });
+        }
+
         const errors = validateMessage(payload);
         if (errors.length) return reply({ ok: false, error: errors[0] });
 

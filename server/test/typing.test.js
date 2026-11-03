@@ -72,3 +72,9 @@ test('the sender id comes from the socket, not from the payload', () => {
   typing({ to: OTHER, isTyping: true, from: 'mallory' });
   assert.equal(sent[0].payload.from, 'alice');
 });
+
+test('a flood of typing events is cut off', () => {
+  const { sent, typing } = fakeSocket('alice');
+  for (let i = 0; i < 100; i++) typing({ to: OTHER, isTyping: i % 2 === 0 });
+  assert.equal(sent.length, 40);
+});

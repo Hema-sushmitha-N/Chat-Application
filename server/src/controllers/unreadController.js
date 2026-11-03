@@ -1,48 +1,38 @@
 import Message from '../models/Message.js';
+import mongoose from 'mongoose';
 import Room from '../models/Room.js';
 import ReadState, { markRead } from '../models/ReadState.js';
 import { isConversationKey } from '../utils/validators.js';
-
-const countSince = (filter, since) =>
-  Message.countDocuments(since ? { ...filter, createdAt: { $gt: since } } : filter);
+import { buildUnreadMatch, toCounts } from '../utils/unread.js';
 
 // GET /api/unread
 // -> { counts: { 'user:<id>': 3, 'room:<id>': 1 } }  (only conversations that have unread messages)
 export async function getUnread(req, res, next) {
   try {
-    const me = req.userId;
+    // Mongoose casts find/distinct filters, but does not cast aggregation stages.
+    const me = new mongoose.Types.ObjectId(req.userId);
     const [states, senders, myRooms] = await Promise.all([
       ReadState.find({ user: me }).lean(),
       Message.distinct('sender', { receiver: me }),
       Room.find({ members: me }).select('_id').lean(),
     ]);
-    const lastRead = new Map(states.map((s) => [s.key, s.lastReadAt]));
 
-    const counts = {};
-    const jobs = [];
+    const match = buildUnreadMatch({
+      me,
+      senders,
+      roomIds: myRooms.map((r) => r._id),
+      lastRead: new Map(states.map((s) => [s.key, s.lastReadAt])),
+    });
+    if (!match) return res.json({ counts: {} });
 
-    // One-to-one: messages other people sent to me since I last opened that chat
-    for (const sender of senders) {
-      const key = `user:${sender}`;
-      jobs.push(
-        countSince({ sender, receiver: me }, lastRead.get(key)).then((n) => {
-          if (n > 0) counts[key] = n;
-        })
-      );
-    }
+    // One query for every conversation. A one-to-one conversationId only ever holds messages
+    // from a single sender to me here, so grouping by conversationId gives one row per chat.
+    const rows = await Message.aggregate([
+      { $match: match },
+      { $group: { _id: '$conversationId', room: { $first: '$room' }, sender: { $first: '$sender' }, n: { $sum: 1 } } },
+    ]);
 
-    // Rooms: messages from other members since I last opened the room
-    for (const room of myRooms) {
-      const key = `room:${room._id}`;
-      jobs.push(
-        countSince({ room: room._id, sender: { $ne: me } }, lastRead.get(key)).then((n) => {
-          if (n > 0) counts[key] = n;
-        })
-      );
-    }
-
-    await Promise.all(jobs);
-    return res.json({ counts });
+    return res.json({ counts: toCounts(rows) });
   } catch (err) {
     return next(err);
   }
