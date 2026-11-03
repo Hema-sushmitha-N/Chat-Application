@@ -8,8 +8,8 @@ const messageSchema = new mongoose.Schema(
     receiver: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
     room: { type: mongoose.Schema.Types.ObjectId, ref: 'Room' },
     text: { type: String, required: true, trim: true, maxlength: 2000 },
-    // One-to-one messages only: 'sent' (saved, receiver was offline) or 'delivered' (receiver's app has it)
-    status: { type: String, enum: ['sent', 'delivered'], default: 'sent' },
+    // One-to-one messages only: 'sent' (saved), 'delivered' (receiver's app has it), 'read' (chat opened)
+    status: { type: String, enum: ['sent', 'delivered', 'read'], default: 'sent' },
   },
   { timestamps: true }
 );

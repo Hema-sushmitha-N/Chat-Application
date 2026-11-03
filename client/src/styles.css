@@ -483,3 +483,20 @@ button.small {
 .toast:hover:not(:disabled) {
   background: #2d3650;
 }
+
+/* ---- Delivery status (Sprint 2) ---- */
+.bubble .time {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+}
+
+.ticks {
+  margin-left: 6px;
+  letter-spacing: -2px;
+}
+
+.ticks.read {
+  color: #7dd3fc;
+  opacity: 1;
+}
