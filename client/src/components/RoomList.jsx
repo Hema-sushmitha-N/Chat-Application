@@ -36,6 +36,8 @@ export default function RoomList({ rooms, activeId, onSelect, onCreate, onJoin, 
           onChange={(e) => setName(e.target.value)}
           placeholder="New room name"
           maxLength={40}
+          pattern="[A-Za-z0-9][A-Za-z0-9 _\-]*"
+          title="Letters, numbers, spaces, hyphens and underscores"
         />
         <button type="submit" disabled={busy || !name.trim()}>
           Create

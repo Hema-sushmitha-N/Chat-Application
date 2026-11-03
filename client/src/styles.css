@@ -500,3 +500,15 @@ button.small {
   color: #7dd3fc;
   opacity: 1;
 }
+
+/* ---- Input limits (Sprint 2) ---- */
+.char-count {
+  align-self: center;
+  font-size: 12px;
+  color: var(--muted, #94a3b8);
+  white-space: nowrap;
+}
+
+.char-count.limit {
+  color: #f87171;
+}

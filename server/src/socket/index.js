@@ -7,6 +7,7 @@ import { flushPending, registerDelivery } from './delivery.js';
 import { registerTyping } from './typing.js';
 import { verifyToken } from '../utils/token.js';
 import { validateMessage } from '../utils/validators.js';
+import { sanitizeText } from '../utils/sanitize.js';
 import { createRateLimiter } from '../utils/rateLimiter.js';
 
 // CLIENT_ORIGIN may hold several origins separated by commas
@@ -59,7 +60,7 @@ export function initSocket(httpServer) {
         if (errors.length) return reply({ ok: false, error: errors[0] });
 
         const { to, room } = payload;
-        const text = payload.text.trim();
+        const text = sanitizeText(payload.text);
 
         // Group message: only members may post. Save first, then broadcast to the whole room.
         if (room) {

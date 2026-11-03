@@ -8,6 +8,7 @@ import unreadRoutes from './routes/unread.js';
 import messageRoutes from './routes/messages.js';
 import { notFound, errorHandler } from './middleware/errorHandler.js';
 import { rateLimit } from './middleware/rateLimit.js';
+import { sanitizeInput } from './middleware/sanitizeInput.js';
 import { presence } from './socket/presence.js';
 
 // CLIENT_ORIGIN may hold several origins separated by commas
@@ -21,6 +22,7 @@ export function createApp() {
   app.use(helmet());
   app.use(cors({ origin: allowedOrigins }));
   app.use(express.json({ limit: '10kb' }));
+  app.use(sanitizeInput);
 
   // Health check, also handy to see how many users are connected during a load test
   app.get('/api/health', (req, res) =>

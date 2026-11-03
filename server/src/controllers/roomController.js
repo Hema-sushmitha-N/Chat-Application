@@ -1,6 +1,7 @@
 import Room from '../models/Room.js';
 import { markRead } from '../models/ReadState.js';
 import { isObjectId, validateRoom } from '../utils/validators.js';
+import { sanitizeLine } from '../utils/sanitize.js';
 
 // Keep live sockets in step with membership, so room events reach the right people at once
 function syncSockets(req, userId, roomId, joining) {
@@ -32,7 +33,7 @@ export async function createRoom(req, res, next) {
     const errors = validateRoom(req.body);
     if (errors.length) return res.status(400).json({ message: errors[0], errors });
 
-    const name = req.body.name.trim();
+    const name = sanitizeLine(req.body.name);
     const existing = await Room.findOne({ name }).collation({ locale: 'en', strength: 2 });
     if (existing) return res.status(409).json({ message: 'A room with that name already exists' });
 
