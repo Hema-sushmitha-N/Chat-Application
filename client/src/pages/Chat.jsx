@@ -13,7 +13,7 @@ import MessageInput from '../components/MessageInput.jsx';
 import ConnectionBanner from '../components/ConnectionBanner.jsx';
 import TypingIndicator from '../components/TypingIndicator.jsx';
 import Toasts from '../components/Toasts.jsx';
-import { mergeMessages, messageKey } from '../utils/messages.js';
+import { applyStatus, mergeMessages, messageKey } from '../utils/messages.js';
 import {
   notificationPermission,
   requestNotificationPermission,
@@ -89,6 +89,16 @@ export default function Chat() {
     setToasts((prev) => prev.filter((t) => t.id !== id));
   }, []);
 
+  // The user is looking at a conversation: clear its badge, and for a one-to-one chat
+  // tell the other person their messages were read
+  const markConversationRead = useCallback(
+    (key) => {
+      clear(key);
+      if (key.startsWith('user:')) connectSocket().emit('conversation:read', { with: key.slice(5) });
+    },
+    [clear]
+  );
+
   // The tab title shows how many unread messages are waiting
   useEffect(() => {
     document.title = unreadTotal > 0 ? `(${unreadTotal}) ChatSphere` : 'ChatSphere';
@@ -163,7 +173,7 @@ export default function Chat() {
 
       if (isOpen) {
         setMessages((prev) => (prev.some((m) => m.id === msg.id) ? prev : [...prev, msg]));
-        if (msg.sender !== user.id) clear(key); // the user is looking at it, so it counts as read
+        if (msg.sender !== user.id) markConversationRead(key); // the user is looking at it
         return;
       }
       if (msg.sender === user.id) return; // our own message, sent from another tab
@@ -179,7 +189,15 @@ export default function Chat() {
     };
     socket.on('message:new', onNew);
     return () => socket.off('message:new', onNew);
-  }, [active, user.id, bump, clear, addToast]);
+  }, [active, user.id, bump, markConversationRead, addToast]);
+
+  // Delivery status changed for some of our messages (delivered / read)
+  useEffect(() => {
+    const socket = connectSocket();
+    const onStatus = ({ ids, status }) => setMessages((prev) => applyStatus(prev, ids, status));
+    socket.on('message:status', onStatus);
+    return () => socket.off('message:status', onStatus);
+  }, []);
 
   // Messages that arrived while we were offline are delivered in one batch on connect
   useEffect(() => {
@@ -202,12 +220,12 @@ export default function Chat() {
       const relevant = missed.filter((m) => messageKey(m, user.id) === key);
       if (relevant.length > 0) {
         setMessages((prev) => mergeMessages(prev, relevant));
-        clear(key);
+        markConversationRead(key);
       }
     };
     socket.on('offline:messages', onOffline);
     return () => socket.off('offline:messages', onOffline);
-  }, [user.id, addToast, reloadUnread, clear]);
+  }, [user.id, addToast, reloadUnread, markConversationRead]);
 
   // Open a conversation (a user or a room), mark it read and load its stored history
   const openConversation = useCallback(
@@ -215,7 +233,7 @@ export default function Chat() {
       setActive(conversation);
       setMessages([]);
       setError('');
-      clear(`${conversation.type}:${conversation.id}`);
+      markConversationRead(`${conversation.type}:${conversation.id}`);
       try {
         const data = await fetchHistory(conversation);
         setMessages(data.messages);
@@ -223,7 +241,7 @@ export default function Chat() {
         setError(e.message);
       }
     },
-    [clear]
+    [markConversationRead]
   );
 
   const selectUser = (u) => openConversation({ type: 'user', id: u.id, name: u.username });

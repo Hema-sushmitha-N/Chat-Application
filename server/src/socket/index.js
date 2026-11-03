@@ -3,7 +3,7 @@ import User from '../models/User.js';
 import Room from '../models/Room.js';
 import Message, { buildConversationId, buildRoomConversationId } from '../models/Message.js';
 import { presence, registerPresence } from './presence.js';
-import { flushPending } from './delivery.js';
+import { flushPending, registerDelivery } from './delivery.js';
 import { registerTyping } from './typing.js';
 import { verifyToken } from '../utils/token.js';
 import { validateMessage } from '../utils/validators.js';
@@ -36,6 +36,7 @@ export function initSocket(httpServer) {
     socket.join(`user:${socket.userId}`);
     registerPresence(io, socket);
     registerTyping(io, socket);
+    registerDelivery(io, socket);
 
     // Client emits: socket.emit('message:send', { to, text }, ack)
     socket.on('message:send', async (payload, ack) => {
@@ -99,7 +100,7 @@ export function initSocket(httpServer) {
 
     // Deliver what arrived while this user was offline
     try {
-      await flushPending(socket);
+      await flushPending(io, socket);
     } catch (err) {
       console.error('Could not deliver pending messages', err);
     }
