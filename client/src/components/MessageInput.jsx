@@ -1,5 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
 
+const MAX_LENGTH = 2000; // same limit as the server
+// Show the counter once the message gets close to the limit
+const COUNTER_FROM = 1800;
+
 // How long after the last key press we tell the other side "stopped typing"
 const STOP_AFTER_MS = 2000;
 
@@ -62,9 +66,14 @@ export default function MessageInput({ onSend, disabled, onTypingChange }) {
         value={text}
         onChange={handleChange}
         placeholder="Type a message..."
-        maxLength={2000}
+        maxLength={MAX_LENGTH}
         disabled={disabled}
       />
+      {text.length >= COUNTER_FROM && (
+        <span className={`char-count ${text.length >= MAX_LENGTH ? 'limit' : ''}`}>
+          {text.length}/{MAX_LENGTH}
+        </span>
+      )}
       <button type="submit" disabled={disabled || !text.trim()}>
         Send
       </button>
